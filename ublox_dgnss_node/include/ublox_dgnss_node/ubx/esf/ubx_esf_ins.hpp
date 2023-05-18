@@ -61,7 +61,7 @@ class ESFINSPayload : UBXPayload
 {
 public:
   static const msg_class_t MSG_CLASS = UBX_ESF;
-  static const msg_id_t MSG_ID = UBX_ESF_ALG;
+  static const msg_id_t MSG_ID = UBX_ESF_INS;
 
   bitfield0_t bitfield0;  // version and validity flags
   u4_t reserved0;

@@ -256,6 +256,7 @@ const ubx_cfg_item_t CFG_SFODO_LATENCY =
 {"CFG_SFODO_LATENCY", 0x3007000a, U2, 0, MS};
 
 // cfg msgout - msg output rate configurations
+// refer to "CFG-MSGOUT: Message output configuration" in the uBlox Interface Desceription document
 const ubx_cfg_item_t CFG_MSGOUT_UBX_NAV_STATUS_USB =
 {"CFG_MSGOUT_UBX_NAV_STATUS_USB", 0x2091001d, U1, 0, NA};
 const ubx_cfg_item_t CFG_MSGOUT_UBX_NAV_CLOCK_USB =
@@ -288,6 +289,10 @@ const ubx_cfg_item_t CFG_MSGOUT_UBX_NAV_VELNED_USB =
 {"CFG_MSGOUT_UBX_NAV_VELNED_USB", 0x20910045, U1, 0, NA};
 const ubx_cfg_item_t CFG_MSGOUT_UBX_RXM_RTCM_USB =
 {"CFG_MSGOUT_UBX_RXM_RTCM_USB", 0x2091026b, U1, 0, NA};
+const ubx_cfg_item_t CFG_MSGOUT_UBX_ESF_ALG_USB =
+{"CFG_MSGOUT_UBX_ESF_ALG_USB", 0x20910112, U1, 0, NA};
+const ubx_cfg_item_t CFG_MSGOUT_UBX_ESF_INS_USB =
+{"CFG_MSGOUT_UBX_ESF_INS_USB", 0x20910117, U1, 0, NA};
 const ubx_cfg_item_t CFG_MSGOUT_UBX_ESF_MEAS_USB =
 {"CFG_MSGOUT_UBX_ESF_MEAS_USB", 0x2091027a, U1, 0, NA};
 const ubx_cfg_item_t CFG_MSGOUT_UBX_ESF_STATUS_USB =
@@ -359,6 +364,8 @@ std::map<ubx_key_id_t, ubx_cfg_item_t> ubxKeyCfgItemMap = {
   {CFG_MSGOUT_UBX_NAV_VELECEF_USB.ubx_key_id, CFG_MSGOUT_UBX_NAV_VELECEF_USB},
   {CFG_MSGOUT_UBX_NAV_VELNED_USB.ubx_key_id, CFG_MSGOUT_UBX_NAV_VELNED_USB},
   {CFG_MSGOUT_UBX_RXM_RTCM_USB.ubx_key_id, CFG_MSGOUT_UBX_RXM_RTCM_USB},
+  {CFG_MSGOUT_UBX_ESF_ALG_USB.ubx_key_id, CFG_MSGOUT_UBX_ESF_ALG_USB},
+  {CFG_MSGOUT_UBX_ESF_INS_USB.ubx_key_id, CFG_MSGOUT_UBX_ESF_INS_USB},
   {CFG_MSGOUT_UBX_ESF_MEAS_USB.ubx_key_id, CFG_MSGOUT_UBX_ESF_MEAS_USB},
   {CFG_MSGOUT_UBX_ESF_STATUS_USB.ubx_key_id, CFG_MSGOUT_UBX_ESF_STATUS_USB}
 };

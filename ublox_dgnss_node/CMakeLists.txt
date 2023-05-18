@@ -25,10 +25,10 @@ find_package(ament_cmake_uncrustify REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(angles REQUIRED)
 find_package(ublox_ubx_msgs REQUIRED)
 find_package(ublox_ubx_interfaces REQUIRED)
 find_package(rtcm_msgs REQUIRED)
-
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(libusb REQUIRED libusb-1.0)
 
@@ -50,6 +50,7 @@ ament_target_dependencies(ublox_dgnss_components
   ublox_ubx_msgs
   ublox_ubx_interfaces
   rtcm_msgs
+  angles
 )
 
 target_link_libraries(ublox_dgnss_components

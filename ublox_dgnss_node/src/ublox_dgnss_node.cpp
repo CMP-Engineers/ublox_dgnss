@@ -21,6 +21,7 @@
 #include <memory>
 #include <vector>
 #include <map>
+#include <angles/angles.h>
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_components/register_node_macro.hpp"
 #include "rcl_interfaces/msg/set_parameters_result.hpp"
@@ -49,6 +50,8 @@
 #include "ublox_ubx_msgs/msg/ubx_nav_vel_ecef.hpp"
 #include "ublox_ubx_msgs/msg/ubx_nav_vel_ned.hpp"
 #include "ublox_ubx_msgs/msg/ubx_rxm_rtcm.hpp"
+#include "ublox_ubx_msgs/msg/ubx_esf_alg.hpp"
+#include "ublox_ubx_msgs/msg/ubx_esf_ins.hpp"
 #include "ublox_ubx_msgs/msg/ubx_esf_status.hpp"
 #include "ublox_ubx_msgs/msg/ubx_esf_meas.hpp"
 #include "ublox_ubx_interfaces/srv/hot_start.hpp"
@@ -175,6 +178,10 @@ public:
       "ubx_nav_vel_ned", qos);
     ubx_rxm_rtcm_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXRxmRTCM>(
       "ubx_rxm_rtcm", qos);
+    ubx_esf_alg_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXEsfALG>(
+      "ubx_esf_alg", qos);
+    ubx_esf_ins_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXEsfINS>(
+      "ubx_esf_ins", qos);
     ubx_esf_status_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXEsfStatus>(
       "ubx_esf_status", qos);
     ubx_esf_meas_pub_ = this->create_publisher<ublox_ubx_msgs::msg::UBXEsfMeas>(
@@ -345,6 +352,8 @@ private:
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXNavVelECEF>::SharedPtr ubx_nav_vel_ecef_pub_;
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXNavVelNED>::SharedPtr ubx_nav_vel_ned_pub_;
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXRxmRTCM>::SharedPtr ubx_rxm_rtcm_pub_;
+  rclcpp::Publisher<ublox_ubx_msgs::msg::UBXEsfALG>::SharedPtr ubx_esf_alg_pub_;
+  rclcpp::Publisher<ublox_ubx_msgs::msg::UBXEsfINS>::SharedPtr ubx_esf_ins_pub_;
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXEsfStatus>::SharedPtr ubx_esf_status_pub_;
   rclcpp::Publisher<ublox_ubx_msgs::msg::UBXEsfMeas>::SharedPtr ubx_esf_meas_pub_;
 
@@ -1243,6 +1252,18 @@ private:
   void ubx_esf_out_frame(ubx_queue_frame_t * f)
   {
     switch (f->ubx_frame->msg_id) {
+      case ubx::UBX_ESF_ALG:
+        RCLCPP_DEBUG(
+          get_logger(), "ubx class: 0x%02x id: 0x%02x esf ALG poll sent to usb device",
+          f->ubx_frame->msg_class,
+          f->ubx_frame->msg_id);
+        break;      
+      case ubx::UBX_ESF_INS:
+        RCLCPP_DEBUG(
+          get_logger(), "ubx class: 0x%02x id: 0x%02x esf INS poll sent to usb device",
+          f->ubx_frame->msg_class,
+          f->ubx_frame->msg_id);
+        break;
       case ubx::UBX_ESF_STATUS:
         RCLCPP_DEBUG(
           get_logger(), "ubx class: 0x%02x id: 0x%02x esf status poll sent to usb device",
@@ -1468,6 +1489,14 @@ private:
   void ubx_esf_in_frame(ubx_queue_frame_t * f)
   {
     switch (f->ubx_frame->msg_id) {
+      case ubx::UBX_ESF_ALG:
+        ubx_esf_->alg()->frame(f->ubx_frame);
+        ubx_esf_alg_pub(f, ubx_esf_->alg()->payload());
+        break;
+      case ubx::UBX_ESF_INS:
+        ubx_esf_->ins()->frame(f->ubx_frame);
+        ubx_esf_ins_pub(f, ubx_esf_->ins()->payload());
+        break;
       case ubx::UBX_ESF_STATUS:
         ubx_esf_->status()->frame(f->ubx_frame);
         ubx_esf_status_pub(f, ubx_esf_->status()->payload());
@@ -1941,6 +1970,60 @@ private:
     msg->msg_type = payload->msgType;
 
     ubx_rxm_rtcm_pub_->publish(*msg);
+  }
+
+  UBLOX_DGNSS_NODE_LOCAL
+  void ubx_esf_alg_pub(
+    ubx_queue_frame_t * f,
+    std::shared_ptr<ubx::esf::alg::ESFALGPayload> payload)
+  {
+    RCLCPP_DEBUG(
+      get_logger(), "ubx class: 0x%02x id: 0x%02x esf ALG polled payload - %s",
+      f->ubx_frame->msg_class, f->ubx_frame->msg_id,
+      payload->to_string().c_str());
+    auto msg = std::make_unique<ublox_ubx_msgs::msg::UBXEsfALG>();
+    msg->header.frame_id = frame_id_;
+    msg->header.stamp = f->ts;
+    msg->itow = payload->iTOW;
+    msg->version = payload->version;
+    msg->auto_mnt_alg_running = (payload->flags.bits.autoMntAlgOn == ubx::esf::alg::auto_mnt_alg_on_t::running);
+    msg->alg_status = static_cast<int>(payload->flags.bits.status);
+    msg->alg_tilt_error = (payload->error.bits.tiltAlgError == ubx::esf::alg::tilt_alg_err_t::error);
+    msg->alg_yaw_error = (payload->error.bits.yawAlgError == ubx::esf::alg::yaw_alg_err_t::error);
+    msg->alg_euler_error = (payload->error.bits.angleError == ubx::esf::alg::euler_alg_err_t::error);
+    msg->yaw = angles::from_degrees(payload->yaw * 0.01);
+    msg->pitch = angles::from_degrees(payload->pitch * 0.01);
+    msg->roll = angles::from_degrees(payload->roll * 0.01);
+    ubx_esf_alg_pub_->publish(*msg);
+  }
+
+  UBLOX_DGNSS_NODE_LOCAL
+  void ubx_esf_ins_pub(
+    ubx_queue_frame_t * f,
+    std::shared_ptr<ubx::esf::ins::ESFINSPayload> payload)
+  {
+    RCLCPP_DEBUG(
+      get_logger(), "ubx class: 0x%02x id: 0x%02x esf INS polled payload - %s",
+      f->ubx_frame->msg_class, f->ubx_frame->msg_id,
+      payload->to_string().c_str());
+    auto msg = std::make_unique<ublox_ubx_msgs::msg::UBXEsfINS>();
+    msg->header.frame_id = frame_id_;
+    msg->header.stamp = f->ts;
+    msg->version = payload->bitfield0.bits.version;
+    msg->x_ang_rate_valid = (payload->bitfield0.bits.xAngRateValid == ubx::esf::ins::ang_rate_valid_t::valid);
+    msg->y_ang_rate_valid = (payload->bitfield0.bits.yAngRateValid == ubx::esf::ins::ang_rate_valid_t::valid);
+    msg->z_ang_rate_valid = (payload->bitfield0.bits.zAngRateValid == ubx::esf::ins::ang_rate_valid_t::valid);
+    msg->x_accel_valid = (payload->bitfield0.bits.xAccelValid == ubx::esf::ins::accel_valid_t::valid);
+    msg->y_accel_valid = (payload->bitfield0.bits.yAccelValid == ubx::esf::ins::accel_valid_t::valid);
+    msg->z_accel_valid = (payload->bitfield0.bits.zAccelValid == ubx::esf::ins::accel_valid_t::valid);
+    msg->itow = payload->iTOW;
+    msg->x_ang_rate = angles::from_degrees(payload->xAngRate * 0.001);
+    msg->y_ang_rate = angles::from_degrees(payload->yAngRate * 0.001);
+    msg->z_ang_rate = angles::from_degrees(payload->zAngRate * 0.001);
+    msg->x_accel = payload->xAccel * 0.001;
+    msg->y_accel = payload->yAccel * 0.001;
+    msg->z_accel = payload->zAccel * 0.001;
+    ubx_esf_ins_pub_->publish(*msg);
   }
 
   UBLOX_DGNSS_NODE_LOCAL

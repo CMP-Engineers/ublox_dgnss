@@ -39,6 +39,8 @@ rosidl_generate_interfaces(ublox_ubx_msgs
   "msg/PSMPVT.msg"
   "msg/PSMStatus.msg"
   "msg/SpoofDet.msg"
+  "msg/UBXEsfALG.msg"
+  "msg/UBXEsfINS.msg"
   "msg/UBXEsfMeas.msg"
   "msg/UBXEsfStatus.msg"
   "msg/UBXNavEOE.msg"

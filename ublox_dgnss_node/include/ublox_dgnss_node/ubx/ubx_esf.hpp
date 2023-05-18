@@ -22,12 +22,16 @@
 #include <vector>
 #include "ublox_dgnss_node/ubx/ubx.hpp"
 #include "ublox_dgnss_node/ubx/utils.hpp"
+#include "ublox_dgnss_node/ubx/esf/ubx_esf_alg.hpp"
+#include "ublox_dgnss_node/ubx/esf/ubx_esf_ins.hpp"
 #include "ublox_dgnss_node/ubx/esf/ubx_esf_status.hpp"
 #include "ublox_dgnss_node/ubx/esf/ubx_esf_meas.hpp"
 
 namespace ubx::esf
 {
 
+typedef UBXFrameComms<esf::alg::ESFALGPayload, usb::Connection> UbxESFALGFrameComms;
+typedef UBXFrameComms<esf::ins::ESFINSPayload, usb::Connection> UbxESFINSFrameComms;
 typedef UBXFrameComms<esf::status::ESFStatusPayload, usb::Connection> UbxESFStatusFrameComms;
 typedef UBXFrameComms<esf::meas::ESFMeasPayload, usb::Connection> UbxESFMeasFrameComms;
 typedef UBXFrameComms<esf::meas::ESFMeasFullPayload, usb::Connection> UbxESFMeasFullFrameComms;
@@ -36,6 +40,8 @@ class UbxEsf
 {
 private:
   std::shared_ptr<usb::Connection> usbc_;
+  std::shared_ptr<UbxESFALGFrameComms> alg_;
+  std::shared_ptr<UbxESFINSFrameComms> ins_;
   std::shared_ptr<UbxESFStatusFrameComms> status_;
   std::shared_ptr<UbxESFMeasFrameComms> meas_;
   std::shared_ptr<UbxESFMeasFullFrameComms> meas_full_;
@@ -44,12 +50,22 @@ public:
   explicit UbxEsf(std::shared_ptr<usb::Connection> usbc)
   {
     usbc_ = usbc;
+    alg_ = std::make_shared<UbxESFALGFrameComms>(usbc_);
+    ins_ = std::make_shared<UbxESFINSFrameComms>(usbc_);
     status_ = std::make_shared<UbxESFStatusFrameComms>(usbc_);
     meas_ = std::make_shared<UbxESFMeasFrameComms>(usbc_);
     meas_full_ = std::make_shared<UbxESFMeasFullFrameComms>(usbc_);
   }
   std::shared_ptr<usb::Connection> usbc(){
     return usbc_;
+  }
+  std::shared_ptr<UbxESFALGFrameComms> alg()
+  {
+    return alg_;
+  }
+  std::shared_ptr<UbxESFINSFrameComms> ins()
+  {
+    return ins_;
   }
   std::shared_ptr<UbxESFStatusFrameComms> status()
   {

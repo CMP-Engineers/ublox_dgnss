@@ -87,9 +87,8 @@ struct sens_status1_t
   };
 };
 
-enum calib_status_t : u1_t {not_calibrated = 0b00, calibrating = 0b01, calibrated0 = 0b01,
-  calibrated1 = 0b11};
-enum time_status_t : u1_t {ts_no_data = 0b00, ts_first_byte_used = 0b01, ts_ttag_provided = 0b11};
+enum calib_status_t : u1_t {not_calibrated = 0b00, calibrating = 0b01, calibrated0 = 0b10, calibrated1 = 0b11};
+enum time_status_t : u1_t {ts_no_data = 0b00, ts_first_byte_used = 0b01, ts_event_input_used = 0b10, ts_ttag_provided = 0b11};
 
 struct sens_status2_t
 {
